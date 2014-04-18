@@ -26,6 +26,15 @@ get '/auth/:name/callback' do
   #PP.pp @auth.methods.sort
   flash[:notice] = 
         %Q{<div class="success">Authenticated as #{@auth['info'].name}.</div>}
+  
+  c  = Pl0user.first(:user => session[:name])
+      if c
+        puts "LOGIN"
+      else
+        c = Pl0user.create(
+          :user => session[:name])
+      end
+      
   redirect '/'
 end
 
