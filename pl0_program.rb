@@ -8,17 +8,17 @@ class Pl0user
   
   property :user, String, :key => true
 
-  has n, :pL0Programs
+  has n, :pL0Programs, :required => false
 end
 
 class PL0Program
   include DataMapper::Resource
   
   property :name, String, :key => true
-  property :user, String
+  property :user, String, :key => true
   property :source, String, :length => 1..1024
   
-  belongs_to :pl0user
+  belongs_to :pl0user, :required => false
 end
 
 

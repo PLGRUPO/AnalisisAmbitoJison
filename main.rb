@@ -29,6 +29,10 @@ get '/list' do
   erb :listFiles, :locals => { :cs => PL0Program.all }
 end
 
+get '/users' do
+  erb :listUsers, :locals => { :cs => Pl0user.all }
+end
+
 get '/:selected?' do |selected|
   puts "*************@auth*****************"
   puts session[:name]
