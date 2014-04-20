@@ -2,6 +2,7 @@ require 'omniauth-oauth2'
 require 'omniauth-google-oauth2'
 require 'omniauth-github'
 require 'omniauth-facebook'
+require 'omniauth-twitter'
 
 use OmniAuth::Builder do
  # config = YAML.load_file 'config/config.yml'
@@ -11,6 +12,7 @@ use OmniAuth::Builder do
  # provider :github, config['identifier'], config['secret']
   provider :github, '408e3d276e9fd7127a59', '46a96ff7c30e6bcb768e9b2b70983d06412b804e'
   provider :facebook, '529119817197427', 'e6ca6fa63bc7ee419f40830989bac593'
+  provider :twitter, 'Ny7nXrY346X9J83AFtE9TF0xm', 'hS99ZNlJyLweYYl34D2j4c7uEI7wMw5SzgAMgJTjmrHHigUHaF'
 end
 
 get '/auth/:name/callback' do
