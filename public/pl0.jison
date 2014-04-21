@@ -290,8 +290,7 @@ condition
   ;
 
 expression
-  : term
-  | term ADD expression
+  : expression ADD expression
     {
       $$ = {
         type: $2,
@@ -299,11 +298,7 @@ expression
         right: $3
       };
     }
-  ;
-
-term
-  : factor
-  | factor MUL term
+  | expression MUL expression
     {
       $$ = {
         type: $2,
@@ -311,15 +306,9 @@ term
         right: $3
       };
     }
-  ;
-
-factor
-  : number
+  | number
   | id
   | LEFTPAR expression RIGHTPAR
-    {
-      $$ = $2;
-    }
   ;
 
 id: ID
