@@ -4,14 +4,16 @@ suite('PL/0 Analyzer using Jison', function() {
 
   test('Asociaciatividad de la resta', function () {
     var result = pl0.parse('a=3-2-1.');
-    assert.equal(result.content.right.left.value, 3);
-    assert.equal(result.content.right.right.type, '-');
+    assert.equal(result.content.right.left.left.value, 3);
+    assert.equal(result.content.right.left.right.value, 2);
+    assert.equal(result.content.right.left.type, '-');
   });
 
   test('Asociaciatividad de la división', function () {
     var result = pl0.parse('a=3/2/1.');
-    assert.equal(result.content.right.left.value, 3);
-    assert.equal(result.content.right.right.type, '/');
+    assert.equal(result.content.right.left.left.value, 3);
+    assert.equal(result.content.right.left.right.value, 2);
+    assert.equal(result.content.right.left.type, '/');
   });
 
   test('Sentencia IF', function () {
