@@ -150,31 +150,17 @@ case 14:
     
 break;
 case 15:
-      this.$ = {
-        type: 'PROCEDURE',
-        name: $$[$0-4].value,
-        args: $$[$0-3],
-        sym_table: $$[$0-1].sym_table,
-        procs: $$[$0-1].procs,
-        content: $$[$0-1].content
-      };
+      this.$ = buildProcedure($$[$0-4], $$[$0-3], $$[$0-1]);
     
 break;
 case 16:
-      this.$ = {
-        type: 'PROCEDURE',
-        name: $$[$0-3].value,
-        args: null,
-        sym_table: $$[$0-1].sym_table,
-        procs: $$[$0-1].procs,
-        content: $$[$0-1].content
-      };
+      this.$ = buildProcedure($$[$0-3], null, $$[$0-1]);
     
 break;
 case 17:
       this.$ = [{
         type: 'ARG',
-        content: $$[$0-2].value
+        name: $$[$0-2].value
       }];
 
       if ($$[$0-1] && $$[$0-1].length > 0)
@@ -184,7 +170,7 @@ break;
 case 19:
       this.$ = [{
         type: 'ARG',
-        content: $$[$0-1].value
+        name: $$[$0-1].value
       }];
 
       if ($$[$0] && $$[$0].length > 0)
@@ -495,6 +481,7 @@ function buildBlock(cd, vd, pd, c) {
     content: c
   };
 
+  // Agregamos las constantes a la tabla de símbolos
   for (var i in cd) {
     res.sym_table[cd[i].name] = {
       type: cd[i].type,
@@ -502,17 +489,39 @@ function buildBlock(cd, vd, pd, c) {
     };
   }
 
+  // Agregamos las variables a la tabla de símbolos
   for (var i in vd) {
     res.sym_table[vd[i].name] = {
       type: vd[i].type,
     };
   }
 
+  // Agregamos los datos básicos de los procedimientos a la tabla de símbolos
   for (var i in pd) {
     res.sym_table[pd[i].name] = {
       type: pd[i].type,
       arglist_size: pd[i].args? pd[i].args.length : 0
     };
+  }
+
+  return res;
+}
+
+function buildProcedure (id, args, block) {
+  res = {
+    type: 'PROCEDURE',
+    name: id.value,
+    args: args,
+    sym_table: block.sym_table,
+    procs: block.procs,
+    content: block.content
+  };
+
+  // Agregamos los argumentos como VAR a la tabla de símbolos del procedimiento
+  for (var i in args) {
+    res.sym_table[args[i].name] = {
+      type: 'VAR'
+    }
   }
 
   return res;
