@@ -150,12 +150,13 @@ case 14:
     
 break;
 case 15:
-      /* Poner declarado, tipo, ... */
       this.$ = {
         type: 'PROCEDURE',
         name: $$[$0-4].value,
         args: $$[$0-3],
-        block: $$[$0-1]
+        sym_table: $$[$0-1].sym_table,
+        procs: $$[$0-1].procs,
+        content: $$[$0-1].content
       };
     
 break;
@@ -164,7 +165,9 @@ case 16:
         type: 'PROCEDURE',
         name: $$[$0-3].value,
         args: null,
-        block: $$[$0-1]
+        sym_table: $$[$0-1].sym_table,
+        procs: $$[$0-1].procs,
+        content: $$[$0-1].content
       };
     
 break;
@@ -487,25 +490,28 @@ parse: function parse(input) {
 function buildBlock(cd, vd, pd, c) {
   var res = {
     type: 'BLOCK',
-    content: c,
-    decls: {}
+    sym_table: {},
+    procs: pd,
+    content: c
   };
 
-  decls = [];
-  if (cd) decls = decls.concat(cd);
-  if (vd) decls = decls.concat(vd);
-
-  for (var i in decls) {
-    res.decls[decls[i].name] = {
-      type: decls[i].type,
-      value: decls[i].value
+  for (var i in cd) {
+    res.sym_table[cd[i].name] = {
+      type: cd[i].type,
+      value: cd[i].value
     };
   }
 
-  for (var i in pd){
-    res.decls[pd[i].name] = {
+  for (var i in vd) {
+    res.sym_table[vd[i].name] = {
+      type: vd[i].type,
+    };
+  }
+
+  for (var i in pd) {
+    res.sym_table[pd[i].name] = {
       type: pd[i].type,
-      argnumber: pd[i].args? pd[i].args.length : 0
+      arglist_size: pd[i].args? pd[i].args.length : 0
     };
   }
 
