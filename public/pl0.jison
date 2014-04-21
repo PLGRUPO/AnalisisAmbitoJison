@@ -4,13 +4,31 @@
 %{
 
 function buildBlock(cd, vd, pd, c) {
-  return {
+  var res = {
     type: 'BLOCK',
-    const_decls: cd,
-    var_decls: vd,
-    proc_decls: pd,
-    content: c
+    content: c,
+    decls: {}
   };
+
+  decls = [];
+  if (cd) decls = decls.concat(cd);
+  if (vd) decls = decls.concat(vd);
+
+  for (var i in decls) {
+    res.decls[decls[i].name] = {
+      type: decls[i].type,
+      value: decls[i].value
+    };
+  }
+
+  for (var i in pd){
+    res.decls[pd[i].name] = {
+      type: pd[i].type,
+      argnumber: pd[i].args? pd[i].args.length : 0
+    };
+  }
+
+  return res;
 }
 
 %}
@@ -18,8 +36,9 @@ function buildBlock(cd, vd, pd, c) {
 /* Reglas de precedencia */
 
 %right ASSIGN
-%left ADD
-%left MUL
+%left '+' '-'
+%left '*' '/'
+%left UMINUS
 
 %right THEN ELSE
 
@@ -61,13 +80,13 @@ block
   ;
 
 proc_decls
-  : proc_decl proc_decls
+  : /* nada */
+  | proc_decl proc_decls
     {
       $$ = [$1];
       if ($2 && $2.length > 0)
         $$ = $$.concat($2);
     }
-  | /* nada */
   ;
 
 const_decls
@@ -80,13 +99,13 @@ const_decls
   ;
 
 comma_const_decls
-  : COMMA const_decl comma_const_decls
+  : /* nada */
+  | COMMA const_decl comma_const_decls
     {
       $$ = [$2];
       if ($3 && $3.length > 0)
         $$ = $$.concat($3);
     }
-  | /* nada */
   ;
 
 const_decl
@@ -114,7 +133,8 @@ var_decls
   ;
 
 comma_var_decls
-  : COMMA id comma_var_decls
+  : /* nada */
+  | COMMA id comma_var_decls
     {
       $$ = [{
         type: 'VAR',
@@ -124,12 +144,12 @@ comma_var_decls
       if ($3 && $3.length > 0)
         $$ = $$.concat($3);
     }
-  | /* nada */
   ;
 
 proc_decl
   : PROCEDURE id arglist END_SENTENCE block END_SENTENCE
     {
+      /* Poner declarado, tipo, ... */
       $$ = {
         type: 'PROCEDURE',
         name: $2.value,
@@ -162,7 +182,8 @@ arglist
   ;
 
 comma_arglist
-  : COMMA id comma_arglist
+  : /* nada */
+  | COMMA id comma_arglist
     {
       $$ = [{
         type: 'ARG',
@@ -172,7 +193,6 @@ comma_arglist
       if ($3 && $3.length > 0)
         $$ = $$.concat($3);
     }
-  | /* nada */
   ;
 
 argexplist
@@ -189,7 +209,8 @@ argexplist
   ;
 
 comma_argexplist
-  : COMMA expression comma_argexplist
+  : /* nada */
+  | COMMA expression comma_argexplist
     {
       $$ = [{
         type: 'ARGEXP',
@@ -199,11 +220,11 @@ comma_argexplist
       if ($3 && $3.length > 0)
         $$ = $$.concat($3);
     }
-  | /* nada */
   ;
 
 statement
-  : CALL id argexplist
+  : /* nada */
+  | CALL id argexplist
     {
       $$ = {
         type: 'PROC_CALL',
@@ -258,17 +279,16 @@ statement
         right: $3
       };
     }
-  | /* nada */
   ;
 
 statement_list
-  : END_SENTENCE statement statement_list
+  : /* nada */
+  | END_SENTENCE statement statement_list
     {
       $$ = [$2];
       if ($3 && $3.length > 0)
         $$ = $$.concat($3);
     }
-  | /* nada */
   ;
 
 condition
@@ -290,7 +310,7 @@ condition
   ;
 
 expression
-  : expression ADD expression
+  : expression '+' expression
     {
       $$ = {
         type: $2,
@@ -298,17 +318,43 @@ expression
         right: $3
       };
     }
-  | expression MUL expression
+  | expression '-' expression
     {
       $$ = {
         type: $2,
         left: $1,
         right: $3
+      };
+    }
+  | expression '*' expression
+    {
+      $$ = {
+        type: $2,
+        left: $1,
+        right: $3
+      };
+    }
+  | expression '/' expression
+    {
+      $$ = {
+        type: $2,
+        left: $1,
+        right: $3
+      };
+    }
+  | '-' expression %prec UMINUS
+    {
+      $$ = {
+        type: $1,
+        value: $2
       };
     }
   | number
   | id
   | LEFTPAR expression RIGHTPAR
+    {
+      $$ = $2;
+    }
   ;
 
 id: ID
@@ -330,4 +376,3 @@ number: NUMBER
   ;
 
 %%
-/* Fin de la gramática */
