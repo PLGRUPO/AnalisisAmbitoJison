@@ -1,0 +1,14 @@
+<h1> Files</h1>
+<table>
+  <tr> 
+    <td> Name</td>
+     <td> Email</td>
+     <td>Password</td>
+</tr>
+   <%cs.each do|c| %>
+    <tr>
+      <td> <%= c.name %> </td>
+      <td> <%= c.user %></td>
+      <td> <%= c.source %></td>
+ <% end %>
+</tr>
