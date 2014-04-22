@@ -143,9 +143,13 @@ function semanticAnalysis (node, sym_table) {
         if (node.procs)
           for (var i in node.procs)
             semanticAnalysis(node.procs[i], n_sym_table);
-        if (node.content)
-          for (var i in node.content)
-            semanticAnalysis(node.content[i], n_sym_table);
+        if (node.content) {
+          if (node.content.length)
+            for (var i in node.content)
+              semanticAnalysis(node.content[i], n_sym_table);
+          else
+            semanticAnalysis(node.content, n_sym_table);
+        }
         break;
     }
 
