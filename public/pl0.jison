@@ -15,7 +15,8 @@ function buildBlock(cd, vd, pd, c) {
   for (var i in cd) {
     res.sym_table[cd[i].name] = {
       type: cd[i].type,
-      value: cd[i].value
+      value: cd[i].value,
+      declared_in: 'global'
     };
   }
 
@@ -23,6 +24,7 @@ function buildBlock(cd, vd, pd, c) {
   for (var i in vd) {
     res.sym_table[vd[i].name] = {
       type: vd[i].type,
+      declared_in: 'global'
     };
   }
 
@@ -30,7 +32,8 @@ function buildBlock(cd, vd, pd, c) {
   for (var i in pd) {
     res.sym_table[pd[i].name] = {
       type: pd[i].type,
-      arglist_size: pd[i].args? pd[i].args.length : 0
+      arglist_size: pd[i].args? pd[i].args.length : 0,
+      declared_in: 'global'
     };
   }
 
@@ -50,11 +53,93 @@ function buildProcedure (id, args, block) {
   // Agregamos los argumentos como VAR a la tabla de símbolos del procedimiento
   for (var i in args) {
     res.sym_table[args[i].name] = {
-      type: 'VAR'
+      type: 'VAR',
+      declared_in: id.value
     }
   }
 
+  // Actualizamos los declared_in de los IDs declarados en el bloque
+  // por el nombre del procedimiento
+  for (var i in res.sym_table) {
+    if (res.sym_table.hasOwnProperty(i))
+      res.sym_table[i].declared_in = id.value;
+  }
+
   return res;
+}
+
+function fillDeclaredIn (node, sym_table) {
+  if (!node) return;
+
+  if (node.type == 'ID') {
+    if (sym_table.hasOwnProperty(node.value))
+      node.declared_in = sym_table[node.value].declared_in;
+    else
+      throw (node.value + " has not been declared.");
+  }
+  else  {
+    // Añadimos las declaraciones del nodo actual si las tiene
+    if (node.sym_table) {
+      for (var i in node.sym_table) {
+        if (node.sym_table.hasOwnProperty(i))
+          sym_table[i] = node.sym_table[i];
+      }
+    }
+    
+    switch (node.type) {
+      case '=':
+      case '+':
+      case '*':
+      case '/':
+      case '<':
+      case '<=':
+      case '==':
+      case '!=':
+      case '>=':
+      case '>':
+        fillDeclaredIn(node.left, sym_table);
+        fillDeclaredIn(node.right, sym_table);
+        break;
+      case '-':
+        // Separamos el caso de que sea - unario o binario
+        if (node.left) {
+          fillDeclaredIn(node.left, sym_table);
+          fillDeclaredIn(node.right, sym_table);
+        }
+        else
+          fillDeclaredIn(node.value, sym_table);
+        break;
+      case 'ODD':
+        fillDeclaredIn(node.exp, sym_table);
+        break;
+      case 'ARGEXP':
+        fillDeclaredIn(node.content, sym_table);
+        break;
+      case 'PROC_CALL':
+        fillDeclaredIn(node.name, sym_table);
+        if (node.arguments)
+          for (var i in node.arguments)
+            fillDeclaredIn(node.arguments[i], sym_table);
+        break;
+      case 'IFELSE':
+        fillDeclaredIn(node.sf, sym_table);
+        // No break
+      case 'IF':
+      case 'WHILE':
+        fillDeclaredIn(node.cond, sym_table);
+        fillDeclaredIn(node.st, sym_table);
+        break;
+      case 'BLOCK':
+      case 'PROCEDURE':
+        if (node.procs)
+          for (var i in node.procs)
+            fillDeclaredIn(node.procs[i], sym_table);
+        if (node.content)
+          for (var i in node.content)
+            fillDeclaredIn(node.content[i], sym_table);
+        break;
+    }
+  }
 }
 
 %}
@@ -82,6 +167,7 @@ function buildProcedure (id, args, block) {
 program
   : block END_SYMBOL EOF
     {
+      fillDeclaredIn($1, $1.sym_table);
       return $1;
     }
   ;
@@ -243,7 +329,7 @@ statement
     {
       $$ = {
         type: 'PROC_CALL',
-        name: $2.value,
+        name: $2,
         arguments: $3
       };
     }
@@ -251,7 +337,7 @@ statement
     {
       $$ = {
         type: 'PROC_CALL',
-        name: $2.value,
+        name: $2,
         arguments: null
       };
     }
@@ -376,7 +462,8 @@ id: ID
   {
     $$ = {
       type: 'ID',
-      value: yytext
+      value: yytext,
+      declared_in: null
     };
   }
   ;
