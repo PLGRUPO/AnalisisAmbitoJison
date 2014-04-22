@@ -84,6 +84,7 @@ performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* actio
 var $0 = $$.length - 1;
 switch (yystate) {
 case 1:
+      semanticAnalysis($$[$0-2], $$[$0-2].sym_table);
       return $$[$0-2];
     
 break;
@@ -200,7 +201,7 @@ break;
 case 24:
       this.$ = {
         type: 'PROC_CALL',
-        name: $$[$0-1].value,
+        name: $$[$0-1],
         arguments: $$[$0]
       };
     
@@ -208,7 +209,7 @@ break;
 case 25:
       this.$ = {
         type: 'PROC_CALL',
-        name: $$[$0].value,
+        name: $$[$0],
         arguments: null
       };
     
@@ -319,7 +320,8 @@ break;
 case 43:
     this.$ = {
       type: 'ID',
-      value: yytext
+      value: yytext,
+      declared_in: null
     };
   
 break;
@@ -485,7 +487,8 @@ function buildBlock(cd, vd, pd, c) {
   for (var i in cd) {
     res.sym_table[cd[i].name] = {
       type: cd[i].type,
-      value: cd[i].value
+      value: cd[i].value,
+      declared_in: 'global'
     };
   }
 
@@ -493,6 +496,7 @@ function buildBlock(cd, vd, pd, c) {
   for (var i in vd) {
     res.sym_table[vd[i].name] = {
       type: vd[i].type,
+      declared_in: 'global'
     };
   }
 
@@ -500,7 +504,8 @@ function buildBlock(cd, vd, pd, c) {
   for (var i in pd) {
     res.sym_table[pd[i].name] = {
       type: pd[i].type,
-      arglist_size: pd[i].args? pd[i].args.length : 0
+      arglist_size: pd[i].args? pd[i].args.length : 0,
+      declared_in: 'global'
     };
   }
 
@@ -520,11 +525,116 @@ function buildProcedure (id, args, block) {
   // Agregamos los argumentos como VAR a la tabla de símbolos del procedimiento
   for (var i in args) {
     res.sym_table[args[i].name] = {
-      type: 'VAR'
+      type: 'VAR',
+      declared_in: id.value
     }
   }
 
+  // Actualizamos los declared_in de los IDs declarados en el bloque
+  // por el nombre del procedimiento
+  for (var i in res.sym_table) {
+    if (res.sym_table.hasOwnProperty(i))
+      res.sym_table[i].declared_in = id.value;
+  }
+
   return res;
+}
+
+function semanticAnalysis (node, sym_table) {
+  if (!node) return;
+
+  if (node.type == 'ID') {
+    if (sym_table.hasOwnProperty(node.value))
+      node.declared_in = sym_table[node.value].declared_in;
+    else
+      throw("Identifier \"" + node.value + "\" has not been declared and it's being used.");
+  }
+  else  {
+    // Añadimos las declaraciones del nodo actual si las tiene
+    var n_sym_table = {};
+    for (var i in sym_table)
+      if (sym_table.hasOwnProperty(i))
+        n_sym_table[i] = sym_table[i];
+
+    if (node.sym_table) {
+      for (var i in node.sym_table) {
+        if (node.sym_table.hasOwnProperty(i))
+          n_sym_table[i] = node.sym_table[i];
+      }
+    }
+    
+    // Procesamos todos los hijos del nodo
+    switch (node.type) {
+      case '=':
+      case '+':
+      case '*':
+      case '/':
+      case '<':
+      case '<=':
+      case '==':
+      case '!=':
+      case '>=':
+      case '>':
+        semanticAnalysis(node.left, n_sym_table);
+        semanticAnalysis(node.right, n_sym_table);
+        break;
+      case '-':
+        // Separamos el caso de que sea - unario o binario
+        if (node.left) {
+          semanticAnalysis(node.left, n_sym_table);
+          semanticAnalysis(node.right, n_sym_table);
+        }
+        else
+          semanticAnalysis(node.value, n_sym_table);
+        break;
+      case 'ODD':
+        semanticAnalysis(node.exp, n_sym_table);
+        break;
+      case 'ARGEXP':
+        semanticAnalysis(node.content, n_sym_table);
+        break;
+      case 'PROC_CALL':
+        semanticAnalysis(node.name, n_sym_table);
+        if (node.arguments)
+          for (var i in node.arguments)
+            semanticAnalysis(node.arguments[i], n_sym_table);
+        break;
+      case 'IF':
+      case 'IFELSE':
+      case 'WHILE':
+        if (node.st)
+          for (var i in node.st)
+            semanticAnalysis(node.st[i], n_sym_table);
+        if (node.sf)
+          for (var i in node.sf)
+            semanticAnalysis(node.sf[i], n_sym_table);
+        semanticAnalysis(node.cond, n_sym_table);
+        break;
+      case 'BLOCK':
+      case 'PROCEDURE':
+        if (node.procs)
+          for (var i in node.procs)
+            semanticAnalysis(node.procs[i], n_sym_table);
+        if (node.content)
+          for (var i in node.content)
+            semanticAnalysis(node.content[i], n_sym_table);
+        break;
+    }
+
+    // Detectamos los errores semánticos
+    if (node.type == 'PROC_CALL') {
+      if (sym_table[node.name.value].type != 'PROCEDURE')
+        throw("Cannot make a call to \"" + node.name.value + "\". It's not a procedure.");
+      if (sym_table[node.name.value].arglist_size != (node.arguments? node.arguments.length : 0))
+        throw("Invalid number of arguments in the call to \"" + node.name.value + "\".");
+    }
+    if (node.type == '=') {
+      if (sym_table[node.left.value].type == 'CONST VAR')
+        throw("You cannot assign to the constant \"" + node.left.value + "\".");
+      if (sym_table[node.left.value].type == 'PROCEDURE')
+        throw("You cannot assign to the procedure \"" + node.left.value + "\".");
+    }
+  }
 }
 
 
