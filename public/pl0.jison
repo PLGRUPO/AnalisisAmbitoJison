@@ -79,10 +79,15 @@ function fillDeclaredIn (node, sym_table) {
   }
   else  {
     // Añadimos las declaraciones del nodo actual si las tiene
+    var n_sym_table = {};
+    for (var i in sym_table)
+      if (sym_table.hasOwnProperty(i))
+        n_sym_table[i] = sym_table[i];
+
     if (node.sym_table) {
       for (var i in node.sym_table) {
         if (node.sym_table.hasOwnProperty(i))
-          sym_table[i] = node.sym_table[i];
+          n_sym_table[i] = node.sym_table[i];
       }
     }
     
@@ -97,46 +102,49 @@ function fillDeclaredIn (node, sym_table) {
       case '!=':
       case '>=':
       case '>':
-        fillDeclaredIn(node.left, sym_table);
-        fillDeclaredIn(node.right, sym_table);
+        fillDeclaredIn(node.left, n_sym_table);
+        fillDeclaredIn(node.right, n_sym_table);
         break;
       case '-':
         // Separamos el caso de que sea - unario o binario
         if (node.left) {
-          fillDeclaredIn(node.left, sym_table);
-          fillDeclaredIn(node.right, sym_table);
+          fillDeclaredIn(node.left, n_sym_table);
+          fillDeclaredIn(node.right, n_sym_table);
         }
         else
-          fillDeclaredIn(node.value, sym_table);
+          fillDeclaredIn(node.value, n_sym_table);
         break;
       case 'ODD':
-        fillDeclaredIn(node.exp, sym_table);
+        fillDeclaredIn(node.exp, n_sym_table);
         break;
       case 'ARGEXP':
-        fillDeclaredIn(node.content, sym_table);
+        fillDeclaredIn(node.content, n_sym_table);
         break;
       case 'PROC_CALL':
-        fillDeclaredIn(node.name, sym_table);
+        fillDeclaredIn(node.name, n_sym_table);
         if (node.arguments)
           for (var i in node.arguments)
-            fillDeclaredIn(node.arguments[i], sym_table);
+            fillDeclaredIn(node.arguments[i], n_sym_table);
         break;
-      case 'IFELSE':
-        fillDeclaredIn(node.sf, sym_table);
-        // No break
       case 'IF':
+      case 'IFELSE':
       case 'WHILE':
-        fillDeclaredIn(node.cond, sym_table);
-        fillDeclaredIn(node.st, sym_table);
+        if (node.st)
+          for (var i in node.st)
+            fillDeclaredIn(node.st[i], n_sym_table);
+        if (node.sf)
+          for (var i in node.sf)
+            fillDeclaredIn(node.sf[i], n_sym_table);
+        fillDeclaredIn(node.cond, n_sym_table);
         break;
       case 'BLOCK':
       case 'PROCEDURE':
         if (node.procs)
           for (var i in node.procs)
-            fillDeclaredIn(node.procs[i], sym_table);
+            fillDeclaredIn(node.procs[i], n_sym_table);
         if (node.content)
           for (var i in node.content)
-            fillDeclaredIn(node.content[i], sym_table);
+            fillDeclaredIn(node.content[i], n_sym_table);
         break;
     }
   }
