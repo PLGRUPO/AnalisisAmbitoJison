@@ -48,6 +48,50 @@ suite('PL/0 Analyzer using Jison', function() {
     assert.equal(result.procs[0].content.arguments[2].content.type, '*');
   });
 
+  test('Tabla de símbolos', function() {
+    var result = pl0.parse('const a = 10; var b; procedure c; call c; b = a+7.');
+    assert.deepEqual(result.sym_table, {
+      a: {
+        type: "CONST VAR",
+        value: "10",
+        declared_in: "global"
+      },
+      b: {
+        type: "VAR",
+        declared_in: "global"
+      },
+      c: {
+        type: "PROCEDURE",
+        arglist_size: 0,
+        declared_in: "global"
+      }
+    });
+  });
+
+  test('Atributo declared_in asociado a la declaración más cercana', function() {
+    var result = pl0.parse('var a; procedure b(a); call b(a-1); a = a+7.');
+    assert.equal(result.sym_table.a.declared_in, 'global');
+    assert.equal(result.procs[0].sym_table.a.declared_in, 'b');
+  });
+
+  test('Uso de variables no declaradas', function () {
+    assert.throw(function() {
+      pl0.parse('var a; a = a+2+b.');
+    });
+  });
+
+  test('Asignación a constantes', function () {
+    assert.throw(function() {
+      pl0.parse('const a = 12; a = a+3.');
+    });
+  });
+
+  test('Paso incorrecto de parámetros', function () {
+    assert.throw(function() {
+      pl0.parse('procedure proc (a, b, c); a = b+c; call proc (1, 2).');
+    });
+  });
+
   test('Errores en la entrada', function() {
     assert.throw(function() {
       pl0.parse('var a, b; while (3 < 1) do if (a > b) then a=2-(2.'); // Falta el ')'
