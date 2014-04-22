@@ -84,7 +84,7 @@ performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* actio
 var $0 = $$.length - 1;
 switch (yystate) {
 case 1:
-      fillDeclaredIn($$[$0-2], $$[$0-2].sym_table);
+      semanticAnalysis($$[$0-2], $$[$0-2].sym_table);
       return $$[$0-2];
     
 break;
@@ -540,14 +540,14 @@ function buildProcedure (id, args, block) {
   return res;
 }
 
-function fillDeclaredIn (node, sym_table) {
+function semanticAnalysis (node, sym_table) {
   if (!node) return;
 
   if (node.type == 'ID') {
     if (sym_table.hasOwnProperty(node.value))
       node.declared_in = sym_table[node.value].declared_in;
     else
-      throw (node.value + " has not been declared.");
+      throw("Identifier \"" + node.value + "\" has not been declared and it's being used.");
   }
   else  {
     // Añadimos las declaraciones del nodo actual si las tiene
@@ -563,6 +563,7 @@ function fillDeclaredIn (node, sym_table) {
       }
     }
     
+    // Procesamos todos los hijos del nodo
     switch (node.type) {
       case '=':
       case '+':
@@ -574,50 +575,64 @@ function fillDeclaredIn (node, sym_table) {
       case '!=':
       case '>=':
       case '>':
-        fillDeclaredIn(node.left, n_sym_table);
-        fillDeclaredIn(node.right, n_sym_table);
+        semanticAnalysis(node.left, n_sym_table);
+        semanticAnalysis(node.right, n_sym_table);
         break;
       case '-':
         // Separamos el caso de que sea - unario o binario
         if (node.left) {
-          fillDeclaredIn(node.left, n_sym_table);
-          fillDeclaredIn(node.right, n_sym_table);
+          semanticAnalysis(node.left, n_sym_table);
+          semanticAnalysis(node.right, n_sym_table);
         }
         else
-          fillDeclaredIn(node.value, n_sym_table);
+          semanticAnalysis(node.value, n_sym_table);
         break;
       case 'ODD':
-        fillDeclaredIn(node.exp, n_sym_table);
+        semanticAnalysis(node.exp, n_sym_table);
         break;
       case 'ARGEXP':
-        fillDeclaredIn(node.content, n_sym_table);
+        semanticAnalysis(node.content, n_sym_table);
         break;
       case 'PROC_CALL':
-        fillDeclaredIn(node.name, n_sym_table);
+        semanticAnalysis(node.name, n_sym_table);
         if (node.arguments)
           for (var i in node.arguments)
-            fillDeclaredIn(node.arguments[i], n_sym_table);
+            semanticAnalysis(node.arguments[i], n_sym_table);
         break;
       case 'IF':
       case 'IFELSE':
       case 'WHILE':
         if (node.st)
           for (var i in node.st)
-            fillDeclaredIn(node.st[i], n_sym_table);
+            semanticAnalysis(node.st[i], n_sym_table);
         if (node.sf)
           for (var i in node.sf)
-            fillDeclaredIn(node.sf[i], n_sym_table);
-        fillDeclaredIn(node.cond, n_sym_table);
+            semanticAnalysis(node.sf[i], n_sym_table);
+        semanticAnalysis(node.cond, n_sym_table);
         break;
       case 'BLOCK':
       case 'PROCEDURE':
         if (node.procs)
           for (var i in node.procs)
-            fillDeclaredIn(node.procs[i], n_sym_table);
+            semanticAnalysis(node.procs[i], n_sym_table);
         if (node.content)
           for (var i in node.content)
-            fillDeclaredIn(node.content[i], n_sym_table);
+            semanticAnalysis(node.content[i], n_sym_table);
         break;
+    }
+
+    // Detectamos los errores semánticos
+    if (node.type == 'PROC_CALL') {
+      if (sym_table[node.name.value].type != 'PROCEDURE')
+        throw("Cannot make a call to \"" + node.name.value + "\". It's not a procedure.");
+      if (sym_table[node.name.value].arglist_size != (node.arguments? node.arguments.length : 0))
+        throw("Invalid number of arguments in the call to \"" + node.name.value + "\".");
+    }
+    if (node.type == '=') {
+      if (sym_table[node.left.value].type == 'CONST VAR')
+        throw("You cannot assign to the constant \"" + node.left.value + "\".");
+      if (sym_table[node.left.value].type == 'PROCEDURE')
+        throw("You cannot assign to the procedure \"" + node.left.value + "\".");
     }
   }
 }
