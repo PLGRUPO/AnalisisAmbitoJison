@@ -10,6 +10,8 @@ gem 'omniauth'
 gem 'omniauth-google-oauth2'
 gem 'omniauth-github'
 gem 'omniauth-openid'
+gem 'omniauth-facebook'
+gem 'omniauth-twitter'
 gem 'sass'
 
 group :development do
