@@ -25,7 +25,7 @@ get '/test' do
   erb :test
 end
 
-get '/list' do
+get '/files' do
   erb :listFiles, :locals => { :cs => PL0Program.all }
 end
 

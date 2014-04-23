@@ -11,15 +11,13 @@
       <div class="tile quadro quadro-vertical ol-transparent" style="height:initial;cursor:default;">
       
         <div class="tab-control" data-role="tab-control">
-        <ul class="tabs">
-          <li class="active"><a id="tad_entrada">Entrada</a></li>
-          <li><a id="tad_salida">Salida</a></li>
-          <li ><a id="savebutton"><i class="icon-upload-2"></i>&nbsp;Upload</a></li>
-          <li><a id ="download"><span class="icon-download-2">&nbsp;Download</span></a></li>
-        </ul>
-
-        <br>
-
+	  <ul class="tabs">
+	    <li class="active"><a id="tad_entrada">Entrada</a></li>
+	    <li><a id="tad_salida">Salida</a></li>
+	    <li ><a id="savebutton"><i class="icon-upload-2"></i>&nbsp;Upload</a></li>
+	    <li><a id ="download"><span class="icon-download-2">&nbsp;Download</span></a></li>
+	  </ul>
+	  <br>
         </div>
        
         <div id="entrada" style="padding-left:10px;padding-right:10px;">
@@ -66,28 +64,33 @@
 
       </div>
 
+
+      
+        <!--login panel-->
+        <div class="tile quadro quadro ">
+          <a style="width:250px" class="command-button danger" href="/auth/google_oauth2" title="Google" <%=current?("/auth/google_oauth2")%>>
+            <i class="icon-google-plus"></i>  Login with Google+
+            <br/><br/>
+          </a>
+          
+          <a style="width:250px" class="command-button inverse" href="/auth/github" title="Github" <%=current?("/auth/github")%>>
+	    <i class="icon-github"></i>   Login with Github
+	    <br/><br/>
+          </a>
+          
+          <a style="width:250px;color:white;" class="command-button bg-darkBlue" href="/auth/facebook" title="Facebook" <%=current?("/auth/facebook")%>>
+            <i class="icon-facebook"></i>   Login with Facebook
+            <br/><br/>
+          </a>
+          
+          <a style="width:250px;color:white;" class="command-button bg-blue" href="/auth/twitter" title="Twitter" <%=current?("/auth/twitter")%>>
+            <i class="icon-twitter"></i>   Login with Twitter
+            <br/><br/>
+          </a>
+        </div>
+   </div>   
+ </div>
 </div>
-        
-        
-        <div class="span2">
-                                <a style="width:250px" class="command-button danger" href="/auth/google_oauth2" title="Google" <%=current?("/auth/google_oauth2")%>>
-                                   <i class="icon-google-plus"></i>  Login with Google+
-                                   <br/><br/>
-                                </a>
-                                <a style="width:250px" class="command-button inverse" href="/auth/github" title="Github" <%=current?("/auth/github")%>>
-                                   <i class="icon-github"></i>   Login with Github
-                                    <br/><br/>
-                                </a>
-                                <a style="width:250px;color:white;" class="command-button bg-darkBlue" href="/auth/facebook" title="Facebook" <%=current?("/auth/facebook")%>>
-                                   <i class="icon-facebook"></i>   Login with Facebook
-                                    <br/><br/>
-                                </a>
-                                <a style="width:250px;color:white;" class="command-button bg-blue" href="/auth/twitter" title="Twitter" <%=current?("/auth/twitter")%>>
-                                   <i class="icon-twitter"></i>   Login with Twitter
-                                    <br/><br/>
-                                </a>
-                            </div>
-    </div>
-</div>
+
 
 
