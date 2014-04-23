@@ -43,7 +43,7 @@ get '/:selected?' do |selected|
   c  = PL0Program.first(:name => selected)
   source = if c then c.source else "var a; a = 3-2-1." end
   erb :index, 
-      :locals => { :programs => programs, :source => source }
+      :locals => { :programs => programs, :source => source , :isLogin => session[:name]}
 end
 
 

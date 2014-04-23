@@ -3,6 +3,10 @@
 <script type="text/javascript" src="pl0.js"></script>
 <script type="text/javascript" src="main.js"></script>
 
+<script>
+localStorage.setItem("userName", "<%= isLogin %>");
+</script>
+
 
 <div class="main-content clearfix">
   <div class="tile-area no-padding clearfix">
@@ -14,8 +18,8 @@
 	  <ul class="tabs">
 	    <li class="active"><a id="tad_entrada">Entrada</a></li>
 	    <li><a id="tad_salida">Salida</a></li>
-	    <li ><a id="savebutton"><i class="icon-upload-2"></i>&nbsp;Upload</a></li>
-	    <li><a id ="download"><span class="icon-download-2">&nbsp;Download</span></a></li>
+	    <li ><a id="savebutton"><i class="icon-upload-2"></i>&nbsp;Guardar</a></li>
+	    <li><a id ="download"><span class="icon-download-2">&nbsp;Descargar</span></a></li>
 	  </ul>
 	  <br>
         </div>
@@ -68,6 +72,8 @@
       
         <!--login panel-->
         <div class="tile quadro quadro ">
+
+          <div id = "loginpanel">
           <a style="width:250px" class="command-button danger" href="/auth/google_oauth2" title="Google" <%=current?("/auth/google_oauth2")%>>
             <i class="icon-google-plus"></i>  Login with Google+
             <br/><br/>
@@ -87,6 +93,30 @@
             <i class="icon-twitter"></i>   Login with Twitter
             <br/><br/>
           </a>
+          </div>
+          <div id = "logininfo" style="display:none;">
+           <a style="width:250px;color:white;" class="command-button bg-blue" href="/users" title="Google" <%=current?("/users")%>>
+            <i class="icon-user"></i>  Ver Usuarios
+            <br/><br/>
+          </a>
+          
+          <a style="width:250px;color:white;" class="command-button bg-blue"  href="/files" title="Github" <%=current?("/files")%>>
+	    <i class="icon-files"></i>   Ver Programas 
+	    <br/><br/>
+          </a>
+          </div>
+          
+      <script>
+        var value = localStorage.getItem('userName');
+        if(!value.trim()){
+	  $("#logininfo").hide();
+	  $("#loginpanel").show();
+        }else{
+	  $("#loginpanel").hide();
+	  $("#logininfo").show();
+	  
+        }
+      </script>
         </div>
    </div>   
  </div>
